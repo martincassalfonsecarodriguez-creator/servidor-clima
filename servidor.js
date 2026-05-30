@@ -2,49 +2,46 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 
-// Asignación automática del puerto requerida por Render
+// Puerto dinámico para Render
 const PORT = process.env.PORT || 3000;
 
-// Configuración de seguridad y lectura de datos
 app.use(cors());
 app.use(express.json());
 
-// Base de datos en memoria para almacenar las consultas
+// Aquí se acumulan los datos temporalmente
 let registrosMeteorologicos = [];
 
-// Ruta de diagnóstico para verificar que el servidor funciona en internet
+// Página de inicio
 app.get('/', (req, res) => {
-    res.send('El servidor meteorológico está activo y funcionando correctamente.');
+    res.send('El servidor meteorológico está activo. Para ver los datos ve a /api/ver-registros');
 });
 
-// Ruta POST para recibir y registrar los parámetros geográficos del cliente
-app.post('/api/registro-coordenadas', (req, res) => {
-    const { latitud, longitud, timestamp } = req.body;
-
-    // Validación básica de parámetros obligatorios
-    if (!latitud || !longitud) {
-        return res.status(400).json({ error: "Faltan parámetros geográficos requeridos." });
-    }
-
-    // Estructura del objeto que se guardará en el historial
-    const nuevoRegistro = {
-        id: registrosMeteorologicos.length + 1,
-        latitud: latitud,
-        longitud: longitud,
-        creado_el: timestamp || new Date().toISOString()
-    };
-
-    registrosMeteorologicos.push(nuevoRegistro);
-    console.log(`[Base de Datos] Nuevo registro guardado para coordenadas: ${latitud}, ${longitud}`);
-
-    // Respuesta de éxito en formato JSON para el navegador
-    res.status(201).json({
-        mensaje: "Coordenadas registradas de manera persistente.",
-        id: nuevoRegistro.id
+// NUEVA RUTA (Opción A): Aquí puedes ver la lista de coordenadas desde tu navegador
+app.get('/api/ver-registros', (req, res) => {
+    // Te devuelve la lista completa de datos en formato limpio
+    res.json({
+        total_registros: registrosMeteorologicos.length,
+        datos: registrosMeteorologicos
     });
 });
 
-// Inicialización del servidor web
+// Ruta POST para recibir los datos de tu página web
+app.post('/api/registro-coordenadas', (req, res) => {
+    const { latitud, longitud } = req.body;
+
+    const nuevoRegistro = {
+        id: registrosMeteorologicos.length + 1,
+        latitud: latitud || 40.4167, // Si falla la red usa la de prueba
+        longitud: longitud || -3.7037,
+        fecha: new Date().toLocaleString("es-ES", { timeZone: "America/Montevideo" }) // Guarda la hora del registro
+    };
+
+    registrosMeteorologicos.push(nuevoRegistro);
+    console.log(`[Base de Datos] Guardado: ${nuevoRegistro.latitud}, ${nuevoRegistro.longitud}`);
+
+    res.status(201).json({ mensaje: "Registrado con éxito", id: nuevoRegistro.id });
+});
+
 app.listen(PORT, () => {
-    console.log(`Servidor backend ejecutándose en el puerto ${PORT}`);
+    console.log(`Servidor activo en el puerto ${PORT}`);
 });
