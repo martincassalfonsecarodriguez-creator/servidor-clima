@@ -1,0 +1,13 @@
+{
+  "name": "backend-clima",
+  "version": "1.0.0",
+  "description": "Servidor para datos meteorologicos",
+  "main": "servidor.js",
+  "scripts": {
+    "start": "node servidor.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}
